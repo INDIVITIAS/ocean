@@ -47,7 +47,7 @@ display_ascii() {
     echo -e "${YELLOW}Подписывайтесь на Telegram: https://t.me/CryptalikBTC${RESET}"
     echo -e "${YELLOW}Подписывайтесь на YouTube: https://www.youtube.com/@Cryptalik${RESET}"
     echo -e "${YELLOW}Здесь про аирдропы и ноды: https://t.me/indivitias${RESET}"
-    echo -e "${YELLOW}Купи мне бутылочку... ${ICON_KEFIR}кефира 😏${RESET}"
+    echo -e "${YELLOW}Купи мне крипто бутылочку... ${ICON_KEFIR}кефира 😏${RESET}"
     echo -e "${GREEN}https://bit.ly/4eBbfIr${RESET}"
     echo -e ""
     echo -e "${CYAN}Полезные команды:${RESET}"
