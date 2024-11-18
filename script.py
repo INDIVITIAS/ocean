@@ -16,11 +16,12 @@ def generate_wallets(count):
 def save_wallets_to_json(wallets):
     with open("wallets.json", "w") as json_file:
         json.dump(wallets, json_file, indent=4)
-    print("Generated wallets saved to wallets.json")
+    print("Сгенерированные кошельки сохранены в wallets.json")
+
 
 def create_typesense_compose():
-    typesense_api_key = 'inTheBestDkNodes'
-    admin_password = 'DkNodes'
+    typesense_api_key = 'indivitias'
+    admin_password = 'divitias'
     docker_compose_template = f"""
 services:
   typesense:
@@ -45,7 +46,7 @@ networks:
     external: true
 """
     save_docker_compose_file(docker_compose_template, 1)
-    print("Generated docker-compose1.yaml for typesense")
+   print("Сгенерирован файл docker-compose1.yaml для typesense")
 
 rpcs = {
     "1": {
@@ -159,7 +160,7 @@ networks:
     external: true
 """
     save_docker_compose_file(docker_compose_template, i + 1)
-    print(f"Generated docker-compose{i + 1}.yaml for ocean-node-{i}")
+    print(f"Сгенерирован файл docker-compose{i + 1}.yaml для ocean-node-{i}")
 
 def save_docker_compose_file(content, i):
     filename = f'docker-compose{i}.yaml'
