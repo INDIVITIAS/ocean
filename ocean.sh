@@ -19,6 +19,7 @@ ICON_WALLET="💰"
 ICON_EXIT="❌"
 ICON_CHANGE_RPC="🔄"
 ICON_DELETE="🗑️"
+ICON_KEFIR="🍼"
 
 # Функции для рисования границ
 draw_top_border() {
@@ -46,8 +47,8 @@ display_ascii() {
     echo -e "${YELLOW}Подписывайтесь на Telegram: https://t.me/CryptalikBTC${RESET}"
     echo -e "${YELLOW}Подписывайтесь на YouTube: https://www.youtube.com/@Cryptalik${RESET}"
     echo -e "${YELLOW}Здесь про аирдропы и ноды: https://t.me/indivitias${RESET}"
-    echo -e "${YELLOW}Купи мне бутылочку кефира %)${RESET}"
-    echo -e "${GREEN}0x8a3476d7cd2bf198b2f4dc492d9726e1d1fb25fb${RESET}"
+    echo -e "${YELLOW}Купи мне бутылочку... ${ICON_KEFIR}кефира 😏${RESET}"
+    echo -e "${GREEN}https://bit.ly/4eBbfIr${RESET}"
     echo -e ""
     echo -e "${CYAN}Полезные команды:${RESET}"
     echo -e "  - ${YELLOW}Просмотр файлов директории:${RESET} ls"
