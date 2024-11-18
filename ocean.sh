@@ -49,11 +49,12 @@ display_ascii() {
     echo -e "${YELLOW}Подписывайтесь на Telegram: https://t.me/CryptalikBTC${RESET}"
     echo -e "${YELLOW}Подписывайтесь на YouTube: https://www.youtube.com/@Cryptalik${RESET}"
     echo -e "${YELLOW}Здесь про аирдропы и ноды: https://t.me/indivitias${RESET}"
-    echo -e "${YELLOW}Купи мне крипто бутылочку... ${ICON_KEFIR}кефира 😏${RESET} ${MAGENTA} 👉  https://bit.ly/4eBbfIr  👈 ${MAGENTA}"
+    echo -e "${YELLOW}Купи мне бутылочку... ${ICON_KEFIR}крипто кефира 😏${RESET} ${MAGENTA} 👉  https://bit.ly/4eBbfIr  👈 ${MAGENTA}"
     echo -e ""
     echo -e "${CYAN}Полезные команды:${RESET}"
-    echo -e "  - ${YELLOW}Просмотр файлов директории:${RESET} ls"
-    echo -e "  - ${YELLOW}Вход в директорию:${RESET} cd docker-browser"
+    echo -e "  - ${YELLOW}Просмотр файлов директории:${RESET} ll"
+    echo -e "  - ${YELLOW}Вход в директорию:${RESET} cd ocean"
+    echo -e "  - ${YELLOW}Запуск скрипта(меню):${RESET} bash ocean.sh"
     echo -e "  - ${YELLOW}Выход из директории:${RESET} cd .."
     echo -e ""
 }
@@ -88,14 +89,14 @@ show_menu() {
 
     echo -e "    ${YELLOW}Пожалуйста, выберите опцию:${RESET}"
     echo
-    echo -e "    ${CYAN}1.${RESET} ${ICON_INSTALL} Установить узел"
+    echo -e "    ${CYAN}1.${RESET} ${ICON_INSTALL} Установить ноду"
     echo -e "    ${CYAN}2.${RESET} ${ICON_LOGS} Просмотреть логи Typesense"
-    echo -e "    ${CYAN}3.${RESET} ${ICON_LOGS} Просмотреть логи узлов Ocean"
-    echo -e "    ${CYAN}4.${RESET} ${ICON_STOP} Остановить узел"
-    echo -e "    ${CYAN}5.${RESET} ${ICON_START} Запустить узел"
+    echo -e "    ${CYAN}3.${RESET} ${ICON_LOGS} Просмотреть логи нод Ocean"
+    echo -e "    ${CYAN}4.${RESET} ${ICON_STOP} Остановить ноду"
+    echo -e "    ${CYAN}5.${RESET} ${ICON_START} Запустить ноду"
     echo -e "    ${CYAN}6.${RESET} ${ICON_WALLET} Просмотреть созданные кошельки"
     echo -e "    ${CYAN}7.${RESET} ${ICON_CHANGE_RPC} Изменить RPC"  
-    echo -e "    ${CYAN}0.${RESET} ${ICON_EXIT} Выйти"
+    echo -e "    ${CYAN}0.${RESET} ${ICON_EXIT} Выйти (ноды продолжать работать)"
     echo
     draw_bottom_border
     echo -ne "    ${YELLOW}Введите ваш выбор [0-7]:${RESET} "  
@@ -104,7 +105,7 @@ show_menu() {
 
 # Функция установки узла
 install_node() {
-    echo -e "${GREEN}🛠️  Установка узла...${RESET}"
+    echo -e "${GREEN}🛠️  Установка ноды...${RESET}"
     # Обновление системы
     sudo apt update && sudo apt upgrade -y
 
@@ -141,7 +142,7 @@ install_node() {
     pip3 install eth_account requests
 
     # Запрос количества узлов
-    echo -ne "${YELLOW}Введите количество узлов:${RESET} "
+    echo -ne "${YELLOW}Введите количество нод:${RESET} "
     read num_nodes
 
     # Получение IP-адреса
@@ -165,7 +166,7 @@ install_node() {
     current_dir=$(pwd)
     (crontab -l 2>/dev/null; echo "0 * * * * python3 $(pwd)/req.py $ip_address $current_dir") | crontab -
 
-    echo -e "${GREEN}✅ Узел успешно установлен.${RESET}"
+    echo -e "${GREEN}✅ Нода успешно установлена.${RESET}"
     echo
     read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
@@ -180,9 +181,9 @@ view_typesense_logs() {
 
 # Просмотр логов узлов Ocean
 view_ocean_node_logs() {
-    echo -ne "${YELLOW}Введите количество узлов:${RESET} "
+    echo -ne "${YELLOW}Введите количество нод:${RESET} "
     read num_nodes
-    echo -e "${GREEN}📄 Просмотр логов узлов Ocean...${RESET}"
+    echo -e "${GREEN}📄 Просмотр логов нод Ocean...${RESET}"
     for ((i=1; i<=num_nodes; i++)); do
         docker logs "ocean_node$i"
     done
@@ -192,26 +193,26 @@ view_ocean_node_logs() {
 
 # Остановка узла
 stop_node() {
-    echo -ne "${YELLOW}Введите количество узлов для остановки:${RESET} "
+    echo -ne "${YELLOW}Введите количество нод для остановки:${RESET} "
     read num_nodes
-    echo -e "${GREEN}⏹️ Остановка узлов...${RESET}"
+    echo -e "${GREEN}⏹️ Остановка нод...${RESET}"
     for ((i=1; i<=num_nodes; i++)); do
         docker stop "ocean_node$i"
     done
-    echo -e "${GREEN}✅ Узлы остановлены.${RESET}"
+    echo -e "${GREEN}✅ Ноды остановлены.${RESET}"
     echo
     read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
 
 # Запуск узла
 start_node() {
-    echo -ne "${YELLOW}Введите количество узлов для запуска:${RESET} "
+    echo -ne "${YELLOW}Введите количество нод для запуска:${RESET} "
     read num_nodes
-    echo -e "${GREEN}▶️ Запуск узлов...${RESET}"
+    echo -e "${GREEN}▶️ Запуск нод...${RESET}"
     for ((i=1; i<=num_nodes; i++)); do
         docker start "ocean_node$i"
     done
-    echo -e "${GREEN}✅ Узлы запущены.${RESET}"
+    echo -e "${GREEN}✅ Ноды запущены.${RESET}"
     echo
     read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
@@ -245,7 +246,7 @@ while true; do
         4) stop_node ;;
         5) start_node ;;
         6) view_wallets ;;
-        7) change_rpc ;;  # Новый пункт меню
+        7) change_rpc ;;  
         0) exit 0 ;;
         *) echo -e "${RED}Неверный выбор!${RESET}" ;;
     esac
