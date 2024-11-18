@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Определения цветов и форматирования
+# Определение цветов
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -9,7 +9,7 @@ YELLOW='\033[1;33m'
 MAGENTA='\033[0;35m'
 RESET='\033[0m'
 
-# Иконки для пунктов меню
+# Иконки для меню
 ICON_TELEGRAM="🚀"
 ICON_INSTALL="🛠️"
 ICON_LOGS="📄"
@@ -33,11 +33,13 @@ draw_middle_border() {
 draw_bottom_border() {
     echo -e "${CYAN}╚══════════════════════════════════════════════════════════════════════╝${RESET}"
 }
+
+# Функция для вывода информации о Telegram
 print_telegram_icon() {
     echo -e "          ${MAGENTA}${ICON_TELEGRAM} Подписывайтесь на наш Telegram!${RESET}"
 }
 
-# Логотип и информация
+# Вывод ASCII-логотипа и ссылок
 display_ascii() {
     echo -e "${CYAN}   ____   _  __   ___    ____ _   __   ____ ______   ____   ___    ____${RESET}"
     echo -e "${CYAN}  /  _/  / |/ /  / _ \  /  _/| | / /  /  _//_  __/  /  _/  / _ |  / __/${RESET}"
@@ -56,7 +58,7 @@ display_ascii() {
     echo -e ""
 }
 
-# Функция для получения IP-адреса
+# Получение IP-адреса
 get_ip_address() {
     ip_address=$(hostname -I | awk '{print $1}')
     if [[ -z "$ip_address" ]]; then
@@ -67,6 +69,7 @@ get_ip_address() {
     echo "$ip_address"
 }
 
+# Основное меню
 show_menu() {
     clear
     draw_top_border
@@ -76,7 +79,7 @@ show_menu() {
     echo -e "    ${BLUE}Криптан, подпишись!: ${YELLOW}https://t.me/indivitias${RESET}"
     draw_middle_border
 
-    # Отображаем текущую рабочую директорию и IP-адрес
+    # Текущая директория и IP-адрес
     current_dir=$(pwd)
     ip_address=$(get_ip_address)
     echo -e "    ${GREEN}Текущая директория:${RESET} ${current_dir}"
@@ -99,6 +102,7 @@ show_menu() {
     read choice
 }
 
+# Функция установки узла
 install_node() {
     echo -e "${GREEN}🛠️  Установка узла...${RESET}"
     # Обновление системы
@@ -133,7 +137,7 @@ install_node() {
         sudo systemctl start cron
     fi
 
-    # Установка необходимых библиотек Python
+    # Установка библиотек Python
     pip3 install eth_account requests
 
     # Запрос количества узлов
@@ -151,12 +155,14 @@ install_node() {
     # Запуск script.py с IP-адресом и количеством узлов
     python3 script.py "$ip_address" "$num_nodes"
     docker network create ocean_network
-    # Запуск сервисов Docker Compose для каждого узла
+
+    # Запуск сервисов Docker Compose
     for ((i=1; i<=num_nodes+1; i++)); do
         docker-compose -f docker-compose$i.yaml up -d
     done
+
+    # Запланировать выполнение req.py каждый час
     current_dir=$(pwd)
-    # Запланировать выполнение req.py каждый час с помощью crontab
     (crontab -l 2>/dev/null; echo "0 * * * * python3 $(pwd)/req.py $ip_address $current_dir") | crontab -
 
     echo -e "${GREEN}✅ Узел успешно установлен.${RESET}"
@@ -164,6 +170,7 @@ install_node() {
     read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
 
+# Просмотр логов Typesense
 view_typesense_logs() {
     echo -e "${GREEN}📄 Просмотр логов Typesense...${RESET}"
     docker logs typesense
@@ -171,141 +178,75 @@ view_typesense_logs() {
     read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
 
+# Просмотр логов узлов Ocean
 view_ocean_node_logs() {
     echo -ne "${YELLOW}Введите количество узлов:${RESET} "
     read num_nodes
-    echo -ne "${YELLOW}Выберите узел для просмотра логов (1-${num_nodes}):${RESET} "
-    read node_number
-    echo -e "${GREEN}📄 Просмотр логов ocean-node-${node_number}...${RESET}"
-    docker logs ocean-node-$node_number
+    echo -e "${GREEN}📄 Просмотр логов узлов Ocean...${RESET}"
+    for ((i=1; i<=num_nodes; i++)); do
+        docker logs "ocean_node$i"
+    done
     echo
     read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
 
+# Остановка узла
 stop_node() {
-    echo -ne "${YELLOW}Введите количество узлов:${RESET} "
+    echo -ne "${YELLOW}Введите количество узлов для остановки:${RESET} "
     read num_nodes
-    echo -e "${GREEN}⏹️  Остановка узлов...${RESET}"
-    for ((i=1; i<=num_nodes+1; i++)); do
-        docker-compose -f docker-compose$i.yaml down
+    echo -e "${GREEN}⏹️ Остановка узлов...${RESET}"
+    for ((i=1; i<=num_nodes; i++)); do
+        docker stop "ocean_node$i"
     done
-
-    # Удаление записи в crontab для req.py
-    crontab -l | grep -v "req.py" | crontab -
-
-    echo -e "${GREEN}✅ Узлы остановлены и запись в crontab удалена.${RESET}"
+    echo -e "${GREEN}✅ Узлы остановлены.${RESET}"
     echo
     read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
 
+# Запуск узла
 start_node() {
-    echo -ne "${YELLOW}Введите количество узлов:${RESET} "
+    echo -ne "${YELLOW}Введите количество узлов для запуска:${RESET} "
     read num_nodes
-
-    # Получение IP-адреса
-    ip_address=$(hostname -I | awk '{print $1}')
-    if [[ -z "$ip_address" ]]; then
-        echo -ne "${YELLOW}Не удалось автоматически определить IP-адрес.${RESET}"
-        echo -ne "${YELLOW} Пожалуйста, введите IP-адрес:${RESET} "
-        read ip_address
-    fi
-
-    echo -e "${GREEN}▶️  Запуск узлов...${RESET}"
-    for ((i=1; i<=num_nodes+1; i++)); do
-        docker-compose -f docker-compose$i.yaml up -d
+    echo -e "${GREEN}▶️ Запуск узлов...${RESET}"
+    for ((i=1; i<=num_nodes; i++)); do
+        docker start "ocean_node$i"
     done
-    
-    ip_address=$(hostname -I | awk '{print $1}')
-    if [[ -z "$ip_address" ]]; then
-        echo -ne "${YELLOW}Не удалось автоматически определить IP-адрес.${RESET}"
-        echo -ne "${YELLOW} Пожалуйста, введите IP-адрес:${RESET} "
-        read ip_address
-    fi
-    
-    current_dir=$(pwd)
-    # Запланировать выполнение req.py каждый час с помощью crontab
-    (crontab -l 2>/dev/null; echo "0 * * * * python3 $(pwd)/req.py $ip_address $current_dir") | crontab -
-
-    echo -e "${GREEN}✅ Узлы запущены и запись в crontab добавлена.${RESET}"
+    echo -e "${GREEN}✅ Узлы запущены.${RESET}"
     echo
     read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
 
+# Просмотр созданных кошельков
 view_wallets() {
-    echo -e "${GREEN}💰 Просмотр созданных кошельков...${RESET}"
-    cat wallets.json
+    echo -e "${GREEN}💰 Просмотр кошельков...${RESET}"
+    cat wallets.txt
     echo
     read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
 
-# Новая функция для изменения RPC
+# Изменение RPC
 change_rpc() {
-    echo -e "${GREEN}🔄 Изменение RPC...${RESET}"
-    
-    # Установка библиотеки yaml, если не установлена
-    echo -e "${YELLOW}Установка библиотеки YAML...${RESET}"
-    pip3 install yaml
-    
-    # Определение URL скрипта RPC.py
-    RPC_URL="https://raw.githubusercontent.com/dknodes/ocean/master/RPC.py"
-    
-    # Скачивание RPC.py
-    echo -e "${YELLOW}Скачивание скрипта RPC.py...${RESET}"
-    wget -O RPC.py "$RPC_URL"
-    
-    if [[ $? -ne 0 ]]; then
-        echo -e "${RED}❌ Не удалось скачать RPC.py.${RESET}"
-        echo
-        read -p "Нажмите Enter, чтобы вернуться в главное меню..."
-        return
-    fi
-    
-    # Запуск RPC.py
-    echo -e "${YELLOW}Запуск RPC.py...${RESET}"
-    python3 RPC.py
-    
-    if [[ $? -eq 0 ]]; then
-        echo -e "${GREEN}✅ RPC успешно изменен.${RESET}"
-    else
-        echo -e "${RED}❌ Произошла ошибка при изменении RPC.${RESET}"
-    fi
+    echo -ne "${YELLOW}Введите новый RPC-адрес:${RESET} "
+    read new_rpc
+    sed -i "s|RPC_ADDRESS=.*|RPC_ADDRESS=$new_rpc|" .env
+    echo -e "${GREEN}🔄 RPC-адрес изменен.${RESET}"
     echo
     read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
 
-# Главный цикл
+# Основной цикл программы
 while true; do
     show_menu
+
     case $choice in
-        1)
-            install_node
-            ;;
-        2)
-            view_typesense_logs
-            ;;
-        3)
-            view_ocean_node_logs
-            ;;
-        4)
-            stop_node
-            ;;
-        5)
-            start_node
-            ;;
-        6)
-            view_wallets
-            ;;
-        7)  # Новый пункт для изменения RPC
-            change_rpc
-            ;;
-        0)
-            echo -e "${GREEN}❌ Выход...${RESET}"
-            exit 0
-            ;;
-        *)
-            echo -e "${RED}❌ Неверный выбор. Попробуйте снова.${RESET}"
-            echo
-            read -p "Нажмите Enter для продолжения..."
-            ;;
+        1) install_node ;;
+        2) view_typesense_logs ;;
+        3) view_ocean_node_logs ;;
+        4) stop_node ;;
+        5) start_node ;;
+        6) view_wallets ;;
+        7) change_rpc ;;  # Новый пункт меню
+        0) exit 0 ;;
+        *) echo -e "${RED}Неверный выбор!${RESET}" ;;
     esac
 done
