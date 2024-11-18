@@ -141,10 +141,11 @@ CUSTOM_RPCS_TEMPLATE = {
 def get_docker_compose_files():
     all_files = glob.glob("docker-compose*.yaml")
     files = [f for f in all_files if os.path.basename(f) != "docker-compose1.yaml"]
-    if not files:
-        print("No docker-compose*.yaml files, except docker-compose1.yaml, found in the current directory.")
-    else:
-        print(f"Files found for processing: {files}")
+   if not files:
+    print("В текущей директории не найдено файлов docker-compose*.yaml, кроме docker-compose1.yaml.")
+else:
+    print(f"Найдены файлы для обработки: {files}")
+
     return files
 
 def load_yaml(file_path):
@@ -168,21 +169,21 @@ def main():
     if not files:
         return
 
-    print("\nChoose RPCS replacement option:")
-    print("1. Replace with default RPCS configuration.")
-    print("2. Replace with custom RPCS configuration using your API key.")
-    choice = input("Enter 1 or 2: ").strip()
+    print("\nВыбери как будешь менять RPCS :")
+    print("1. Заменить на конфигурацию RPC по умолчанию.")
+    print("2. Заменить на пользовательскую конфигурацию RPC с использованием вашего API-ключа.")
+    choice = input("Введи 1 или 2: ").strip()
 
     if choice == '1':
         new_rpcs = DEFAULT_RPCS
     elif choice == '2':
-        api_key = input("Enter your Alchemy API key: ").strip()
+        api_key = input("Вставь Alchemy API ключ: ").strip()
         if not api_key:
-            print("API key cannot be empty.")
+            print("API ключ не введен")
             return
         new_rpcs = construct_custom_rpcs(api_key)
     else:
-        print("Invalid choice. Exiting.")
+        print("Неверный выбор. Выходим.")
         return
 
     rpcs_json = json.dumps(new_rpcs, separators=(',', ':'))
@@ -196,19 +197,21 @@ def main():
             for service_name, service_config in services.items():
                 env = service_config.get('environment', {})
                 if 'RPCS' in env:
-                    print(f"Updating RPCS in service '{service_name}' of file '{file}'.")
+                    print(f"Обновление RPCS на сервисе '{service_name}' файла '{file}'.")
                     env['RPCS'] = rpcs_json
                     updated = True
                 else:
-                    print(f"RPCS environment variable not found in service '{service_name}' of file '{file}'. Skipping.")
+                    print(f"Переменная окружения RPCS не найдена в сервисе '{service_name}' файла '{file}'. Пропускаю.")
 
-            if updated:
-                save_yaml(content, file)
-            else:
-                print(f"File '{file}' does not require updating.")
 
-        except Exception as e:
-            print(f"Error processing file '{file}': {e}")
+       if updated:
+    save_yaml(content, file)
+else:
+    print(f"Файл '{file}' не требует обновления.")
+
+except Exception as e:
+    print(f"Ошибка при обработке файла '{file}': {e}")
+
 
 if __name__ == "__main__":
     main()
