@@ -94,11 +94,11 @@ show_menu() {
     echo -e "    ${CYAN}4.${RESET} ${ICON_STOP} Остановить узел"
     echo -e "    ${CYAN}5.${RESET} ${ICON_START} Запустить узел"
     echo -e "    ${CYAN}6.${RESET} ${ICON_WALLET} Просмотреть созданные кошельки"
-    echo -e "    ${CYAN}7.${RESET} ${ICON_CHANGE_RPC} Изменить RPC"  # Новый пункт меню
+    echo -e "    ${CYAN}7.${RESET} ${ICON_CHANGE_RPC} Изменить RPC"  
     echo -e "    ${CYAN}0.${RESET} ${ICON_EXIT} Выйти"
     echo
     draw_bottom_border
-    echo -ne "    ${YELLOW}Введите ваш выбор [0-7]:${RESET} "  # Обновленный диапазон до [0-7]
+    echo -ne "    ${YELLOW}Введите ваш выбор [0-7]:${RESET} "  
     read choice
 }
 
