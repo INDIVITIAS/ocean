@@ -27,8 +27,53 @@ DEFAULT_RPCS = {
         "chainId": 10,
         "network": "optimism",
         "chunkSize": 100
+    },
+    "137": {
+        "rpc": "https://polygon-rpc.com/",
+        "fallbackRPCs": [
+            "https://polygon-mainnet.public.blastapi.io",
+            "https://1rpc.io/matic",
+            "https://rpc.ankr.com/polygon"
+        ],
+        "chainId": 137,
+        "network": "polygon",
+        "chunkSize": 100
+    },
+    "23294": {
+        "rpc": "https://sapphire.oasis.io",
+        "fallbackRPCs": [
+            "https://1rpc.io/oasis/sapphire"
+        ],
+        "chainId": 23294,
+        "network": "sapphire",
+        "chunkSize": 100
+    },
+    "23295": {
+        "rpc": "https://testnet.sapphire.oasis.io",
+        "chainId": 23295,
+        "network": "sapphire-testnet",
+        "chunkSize": 100
+    },
+    "11155111": {
+        "rpc": "https://eth-sepolia.public.blastapi.io",
+        "fallbackRPCs": [
+            "https://1rpc.io/sepolia",
+            "https://eth-sepolia.g.alchemy.com/v2/{API_KEY}"
+        ],
+        "chainId": 11155111,
+        "network": "sepolia",
+        "chunkSize": 100
+    },
+    "11155420": {
+        "rpc": "https://sepolia.optimism.io",
+        "fallbackRPCs": [
+            "https://endpoints.omniatech.io/v1/op/sepolia/public",
+            "https://optimism-sepolia.blockpi.network/v1/rpc/public"
+        ],
+        "chainId": 11155420,
+        "network": "optimism-sepolia",
+        "chunkSize": 100
     }
-    # Дополните по необходимости...
 }
 
 # Пользовательский шаблон RPC
@@ -53,11 +98,49 @@ CUSTOM_RPCS_TEMPLATE = {
         "chainId": 10,
         "network": "optimism",
         "chunkSize": 100
+    },
+    "137": {
+        "rpc": "https://polygon-mainnet.g.alchemy.com/v2/{API_KEY}",
+        "fallbackRPCs": [
+            "https://polygon-mainnet.public.blastapi.io",
+            "https://1rpc.io/matic",
+            "https://rpc.ankr.com/polygon"
+        ],
+        "chainId": 137,
+        "network": "polygon",
+        "chunkSize": 100
+    },
+    "23294": {
+        "rpc": "https://sapphire.oasis.io",
+        "fallbackRPCs": [
+            "https://1rpc.io/oasis/sapphire"
+        ],
+        "chainId": 23294,
+        "network": "sapphire",
+        "chunkSize": 100
+    },
+    "11155111": {
+        "rpc": "https://eth-sepolia.g.alchemy.com/v2/{API_KEY}",
+        "fallbackRPCs": [
+            "https://1rpc.io/sepolia"
+        ],
+        "chainId": 11155111,
+        "network": "sepolia",
+        "chunkSize": 100
+    },
+    "11155420": {
+        "rpc": "https://opt-sepolia.g.alchemy.com/v2/{API_KEY}",
+        "fallbackRPCs": [
+            "https://endpoints.omniatech.io/v1/op/sepolia/public",
+            "https://optimism-sepolia.blockpi.network/v1/rpc/public"
+        ],
+        "chainId": 11155420,
+        "network": "optimism-sepolia",
+        "chunkSize": 100
     }
-    # Дополните по необходимости...
 }
 
-# Поиск всех docker-compose файлов, кроме исключений
+# Функции обработки файлов
 def get_docker_compose_files():
     all_files = glob.glob("docker-compose*.yaml")
     files = [f for f in all_files if os.path.basename(f) != "docker-compose1.yaml"]
@@ -67,18 +150,15 @@ def get_docker_compose_files():
         print(f"Найдены файлы для обработки: {files}")
     return files
 
-# Загрузка YAML-файла
 def load_yaml(file_path):
     with open(file_path, 'r') as f:
         return yaml.safe_load(f)
 
-# Сохранение YAML-файла
 def save_yaml(content, file_path):
     with open(file_path, 'w') as f:
         yaml.dump(content, f, sort_keys=False, default_flow_style=False, allow_unicode=True)
     print(f"Файл обновлен: {file_path}")
 
-# Генерация кастомных RPC
 def construct_custom_rpcs(api_key):
     rpcs = copy.deepcopy(CUSTOM_RPCS_TEMPLATE)
     for chain_id, config in rpcs.items():
@@ -86,7 +166,6 @@ def construct_custom_rpcs(api_key):
             rpcs[chain_id]["rpc"] = config["rpc"].replace("{API_KEY}", api_key)
     return rpcs
 
-# Основной процесс
 def main():
     files = get_docker_compose_files()
     if not files:
@@ -134,6 +213,5 @@ def main():
         except Exception as e:
             print(f"Ошибка при обработке файла '{file}': {e}")
 
-# Запуск скрипта
 if __name__ == "__main__":
     main()
