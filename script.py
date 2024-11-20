@@ -20,7 +20,7 @@ def save_wallets_to_json(wallets):
 
 def create_typesense_compose():
     typesense_api_key = 'indivitias'
-    admin_password = 'indi'
+    admin_password = 'Indi'
     docker_compose_template = f"""
 services:
   typesense:
