@@ -50,9 +50,10 @@ display_ascii() {
     echo -e "${YELLOW}Купи мне крипто бутылочку... ${ICON_KEFIR}кефира 😏${RESET} ${MAGENTA} 👉  https://bit.ly/4eBbfIr  👈 ${MAGENTA}"
     echo -e ""
     echo -e "${CYAN}Полезные команды:${RESET}"
-    echo -e "  - ${YELLOW}Просмотр файлов директории:${RESET} ls"
-    echo -e "  - ${YELLOW}Вход в директорию:${RESET} cd docker-browser"
+    echo -e "  - ${YELLOW}Просмотр файлов директории:${RESET} ll"
+    echo -e "  - ${YELLOW}Вход в директорию:${RESET} cd ocean"
     echo -e "  - ${YELLOW}Выход из директории:${RESET} cd .."
+    echo -e "  - ${YELLOW}Запуск меню скрипта (не установка) из директории ocean:${RESET} bash OCEAN1.sh"
     echo -e ""
 }
 
