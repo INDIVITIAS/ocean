@@ -46,7 +46,7 @@ networks:
     external: true
 """
     save_docker_compose_file(docker_compose_template, 1)
-   print("Сгенерирован файл docker-compose1.yaml для typesense")
+    print("Сгенерирован файл docker-compose1.yaml для typesense")
 
 rpcs = {
     "1": {
