@@ -248,7 +248,7 @@ change_rpc() {
     pip3 install yaml
     
     # Определение URL скрипта RPC.py
-    RPC_URL="https://raw.githubusercontent.com/dknodes/ocean/master/RPC.py"
+    RPC_URL="https://raw.githubusercontent.com/indivitias/ocean/master/RPC.py"
     
     # Скачивание RPC.py
     echo -e "${YELLOW}Скачивание скрипта RPC.py...${RESET}"
