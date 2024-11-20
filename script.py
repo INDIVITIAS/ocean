@@ -140,7 +140,7 @@ services:
     environment:
       PRIVATE_KEY: '{wallet['private_key']}'
       RPCS: '{rpcs_json}'
-      DB_URL: 'http://typesense:8108/?apiKey=indivitiasindi'
+      DB_URL: 'http://typesense:8108/?apiKey=indivitias'
       IPFS_GATEWAY: 'https://ipfs.io/'
       ARWEAVE_GATEWAY: 'https://arweave.net/'
       INTERFACES: '["HTTP","P2P"]'
