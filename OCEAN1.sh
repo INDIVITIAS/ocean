@@ -33,6 +33,9 @@ draw_middle_border() {
 draw_bottom_border() {
     echo -e "${CYAN}╚══════════════════════════════════════════════════════════════════════╝${RESET}"
 }
+print_telegram_icon() {
+    echo -e "          ${MAGENTA}${ICON_TELEGRAM} Подписывайтесь на наш Telegram!${RESET}"
+}
 
 # Логотип и информация
 display_ascii() {
@@ -54,112 +57,256 @@ display_ascii() {
     echo -e ""
 }
 
-download_node() {
-  echo 'Начинаю установку...'
-
-  sudo apt update -y && sudo apt upgrade -y
-  sudo apt-get install make build-essential unzip lz4 gcc git jq -y
-
-  sudo apt install docker.io -y
-
-  sudo systemctl start docker
-  sudo systemctl enable docker
-
-  sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-  sudo chmod +x /usr/local/bin/docker-compose
-
-  git clone https://github.com/Uniswap/unichain-node
-  cd unichain-node || { echo -e "Не получилось зайти в директорию"; return; }
-  
-  if [[ -f .env.sepolia ]]; then
-    sed -i 's|^OP_NODE_L1_ETH_RPC=.*$|OP_NODE_L1_ETH_RPC=https://ethereum-sepolia-rpc.publicnode.com|' .env.sepolia
-    sed -i 's|^OP_NODE_L1_BEACON=.*$|OP_NODE_L1_BEACON=https://ethereum-sepolia-beacon-api.publicnode.com|' .env.sepolia
-  else
-    echo -e "Sepolia ENV не было найдено"
-    return
-  fi
-
-  sudo docker-compose up -d
+# Функция для получения IP-адреса
+get_ip_address() {
+    ip_address=$(hostname -I | awk '{print $1}')
+    if [[ -z "$ip_address" ]]; then
+        echo -ne "${YELLOW}Не удалось автоматически определить IP-адрес.${RESET}"
+        echo -ne "${YELLOW} Пожалуйста, введите IP-адрес:${RESET} "
+        read ip_address
+    fi
+    echo "$ip_address"
 }
 
-restart_node() {
-  HOMEDIR="$HOME"
-  sudo docker-compose -f "${HOMEDIR}/unichain-node/docker-compose.yml" down
-  sudo docker-compose -f "${HOMEDIR}/unichain-node/docker-compose.yml" up -d
+show_menu() {
+    clear
+    draw_top_border
+    display_ascii
+    draw_middle_border
+    print_telegram_icon
+    echo -e "    ${BLUE}Криптан, подпишись!: ${YELLOW}https://t.me/indivitias${RESET}"
+    draw_middle_border
 
-  echo 'Unichain был перезагружен'
+    # Отображаем текущую рабочую директорию и IP-адрес
+    current_dir=$(pwd)
+    ip_address=$(get_ip_address)
+    echo -e "    ${GREEN}Текущая директория:${RESET} ${current_dir}"
+    echo -e "    ${GREEN}IP-адрес:${RESET} ${ip_address}"
+    draw_middle_border
+
+    echo -e "    ${YELLOW}Пожалуйста, выберите опцию:${RESET}"
+    echo
+    echo -e "    ${CYAN}1.${RESET} ${ICON_INSTALL} Установить ноды"
+    echo -e "    ${CYAN}2.${RESET} ${ICON_LOGS} Просмотреть логи Typesense"
+    echo -e "    ${CYAN}3.${RESET} ${ICON_LOGS} Просмотреть логи нод Ocean"
+    echo -e "    ${CYAN}4.${RESET} ${ICON_STOP} Остановить ноды"
+    echo -e "    ${CYAN}5.${RESET} ${ICON_START} Запустить ноды"
+    echo -e "    ${CYAN}6.${RESET} ${ICON_WALLET} Просмотреть созданные кошельки"
+    echo -e "    ${CYAN}7.${RESET} ${ICON_CHANGE_RPC} Изменить RPC" 
+    echo -e "    ${CYAN}0.${RESET} ${ICON_EXIT} Выйти"
+    echo
+    draw_bottom_border
+    echo -ne "    ${YELLOW}Введите ваш выбор [0-7]:${RESET} "  # Обновленный диапазон до [0-7]
+    read choice
 }
 
-check_node() {
-  response=$(curl -s -d '{"id":1,"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["latest",false]}' \
-    -H "Content-Type: application/json" http://localhost:8545)
+install_node() {
+    echo -e "${GREEN}🛠️  Установка нод...${RESET}"
+    # Обновление системы
+    sudo apt update && sudo apt upgrade -y
 
-  echo -e "${BLUE}RESPONSE:${RESET} $response"
+    # Установка Docker, если не установлен
+    if ! command -v docker &> /dev/null; then
+        sudo apt install docker.io -y
+        sudo systemctl start docker
+        sudo systemctl enable docker
+    fi
+
+    # Установка Docker Compose, если не установлен
+    if ! command -v docker-compose &> /dev/null; then
+        sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" \
+        -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+    fi
+
+    # Установка Python3 и pip3, если не установлены
+    if ! command -v python3 &> /dev/null; then
+        sudo apt install python3 -y
+    fi
+    if ! command -v pip3 &> /dev/null; then
+        sudo apt install python3-pip -y
+    fi
+
+    # Установка crontab, если не установлен
+    if ! command -v crontab &> /dev/null; then
+        sudo apt install cron -y
+        sudo systemctl enable cron
+        sudo systemctl start cron
+    fi
+
+    # Установка необходимых библиотек Python
+    pip3 install eth_account requests
+
+    # Запрос количества узлов
+    echo -ne "${YELLOW}Введите количество нод:${RESET} "
+    read num_nodes
+
+    # Получение IP-адреса
+    ip_address=$(hostname -I | awk '{print $1}')
+    if [[ -z "$ip_address" ]]; then
+        echo -ne "${YELLOW}Не удалось автоматически определить IP-адрес.${RESET}"
+        echo -ne "${YELLOW} Пожалуйста, введите IP-адрес:${RESET} "
+        read ip_address
+    fi
+
+    # Запуск script.py с IP-адресом и количеством узлов
+    python3 script.py "$ip_address" "$num_nodes"
+    docker network create ocean_network
+    # Запуск сервисов Docker Compose для каждого узла
+    for ((i=1; i<=num_nodes+1; i++)); do
+        docker-compose -f docker-compose$i.yaml up -d
+    done
+    current_dir=$(pwd)
+    # Запланировать выполнение req.py каждый час с помощью crontab
+    (crontab -l 2>/dev/null; echo "0 * * * * python3 $(pwd)/req.py $ip_address $current_dir") | crontab -
+
+    echo -e "${GREEN}✅ Ноды успешно установлены.${RESET}"
+    echo
+    read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
 
-check_logs_op_node() {
-  sudo docker logs unichain-node-op-node-1
+view_typesense_logs() {
+    echo -e "${GREEN}📄 Просмотр логов Typesense...${RESET}"
+    docker logs typesense
+    echo
+    read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
 
-check_logs_unichain() {
-  sudo docker logs unichain-node-execution-client-1
+view_ocean_node_logs() {
+    echo -ne "${YELLOW}Введите количество нод:${RESET} "
+    read num_nodes
+    echo -ne "${YELLOW}Выберите ноду для просмотра логов (1-${num_nodes}):${RESET} "
+    read node_number
+    echo -e "${GREEN}📄 Просмотр логов ocean-node-${node_number}...${RESET}"
+    docker logs ocean-node-$node_number
+    echo
+    read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
 
 stop_node() {
-  HOMEDIR="$HOME"
-  sudo docker-compose -f "${HOMEDIR}/unichain-node/docker-compose.yml" down
+    echo -ne "${YELLOW}Введите количество нод:${RESET} "
+    read num_nodes
+    echo -e "${GREEN}⏹️  Остановка нод...${RESET}"
+    for ((i=1; i<=num_nodes+1; i++)); do
+        docker-compose -f docker-compose$i.yaml down
+    done
+
+    # Удаление записи в crontab для req.py
+    crontab -l | grep -v "req.py" | crontab -
+
+    echo -e "${GREEN}✅ Ноды остановлены и запись в crontab удалена.${RESET}"
+    echo
+    read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
 
-display_private_key() {
-  cd $HOME
-  echo -e 'Ваш приватник: \n' && cat unichain-node/geth-data/geth/nodekey
+start_node() {
+    echo -ne "${YELLOW}Введите количество нод:${RESET} "
+    read num_nodes
+
+    # Получение IP-адреса
+    ip_address=$(hostname -I | awk '{print $1}')
+    if [[ -z "$ip_address" ]]; then
+        echo -ne "${YELLOW}Не удалось автоматически определить IP-адрес.${RESET}"
+        echo -ne "${YELLOW} Пожалуйста, введите IP-адрес:${RESET} "
+        read ip_address
+    fi
+
+    echo -e "${GREEN}▶️  Запуск нод...${RESET}"
+    for ((i=1; i<=num_nodes+1; i++)); do
+        docker-compose -f docker-compose$i.yaml up -d
+    done
+    
+    ip_address=$(hostname -I | awk '{print $1}')
+    if [[ -z "$ip_address" ]]; then
+        echo -ne "${YELLOW}Не удалось автоматически определить IP-адрес.${RESET}"
+        echo -ne "${YELLOW} Пожалуйста, введите IP-адрес:${RESET} "
+        read ip_address
+    fi
+    
+    current_dir=$(pwd)
+    # Запланировать выполнение req.py каждый час с помощью crontab
+    (crontab -l 2>/dev/null; echo "0 * * * * python3 $(pwd)/req.py $ip_address $current_dir") | crontab -
+
+    echo -e "${GREEN}✅ Ноды запущены и запись в crontab добавлена.${RESET}"
+    echo
+    read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
 
-exit_from_script() {
-  exit 0
+view_wallets() {
+    echo -e "${GREEN}💰 Просмотр созданных кошельков...${RESET}"
+    cat wallets.json
+    echo
+    read -p "Нажмите Enter, чтобы вернуться в главное меню..."
 }
 
+# Новая функция для изменения RPC
+change_rpc() {
+    echo -e "${GREEN}🔄 Изменение RPC...${RESET}"
+    
+    # Установка библиотеки yaml, если не установлена
+    echo -e "${YELLOW}Установка библиотеки YAML...${RESET}"
+    pip3 install yaml
+    
+    # Определение URL скрипта RPC.py
+    RPC_URL="https://raw.githubusercontent.com/indivitias/ocean/master/RPC.py"
+    
+    # Скачивание RPC.py
+    echo -e "${YELLOW}Скачивание скрипта RPC.py...${RESET}"
+    wget -O RPC.py "$RPC_URL"
+    
+    if [[ $? -ne 0 ]]; then
+        echo -e "${RED}❌ Не удалось скачать RPC.py.${RESET}"
+        echo
+        read -p "Нажмите Enter, чтобы вернуться в главное меню..."
+        return
+    fi
+    
+    # Запуск RPC.py
+    echo -e "${YELLOW}Запуск RPC.py...${RESET}"
+    python3 RPC.py
+    
+    if [[ $? -eq 0 ]]; then
+        echo -e "${GREEN}✅ RPC успешно изменен.${RESET}"
+    else
+        echo -e "${RED}❌ Произошла ошибка при изменении RPC.${RESET}"
+    fi
+    echo
+    read -p "Нажмите Enter, чтобы вернуться в главное меню..."
+}
+
+# Главный цикл
 while true; do
-    display_ascii
-    sleep 2
-    echo -e "\n\nМеню:"
-    echo "1. 🚀 Установить ноду"
-    echo "2. 🔄 Перезагрузить ноду"
-    echo "3. ✅ Проверить ноду"
-    echo "4. 📜 Посмотреть логи Unichain (OP)"
-    echo "5. 📜 Посмотреть логи Unichain"
-    echo "6. 🛑 Остановить ноду"
-    echo "7. 🔑 Посмотреть приватный ключ"
-    echo -e "8. ❌ Выйти из скрипта\n"
-    read -p "Выберите пункт меню: " choice
-
+    show_menu
     case $choice in
-      1)
-        download_node
-        ;;
-      2)
-        restart_node
-        ;;
-      3)
-        check_node
-        ;;
-      4)
-        check_logs_op_node
-        ;;
-      5)
-        check_logs_unichain
-        ;;
-      6)
-        stop_node
-        ;;
-      7)
-        display_private_key
-        ;;
-      8)
-        exit_from_script
-        ;;
-      *)
-        echo "Неверный пункт. Пожалуйста, выберите правильную цифру в меню."
-        ;;
+        1)
+            install_node
+            ;;
+        2)
+            view_typesense_logs
+            ;;
+        3)
+            view_ocean_node_logs
+            ;;
+        4)
+            stop_node
+            ;;
+        5)
+            start_node
+            ;;
+        6)
+            view_wallets
+            ;;
+        7)  # Новый пункт для изменения RPC
+            change_rpc
+            ;;
+        0)
+            echo -e "${GREEN}❌ Выход...${RESET}"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}❌ Неверный выбор. Попробуйте снова.${RESET}"
+            echo
+            read -p "Нажмите Enter для продолжения..."
+            ;;
     esac
 done
